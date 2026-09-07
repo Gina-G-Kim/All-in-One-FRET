@@ -64,5 +64,7 @@ docker rmi fret-lab
 ./fret.sh logs      # 로그 확인
 ```
 
-**JKind은 JVM 기반이라 Kind2보다 메모리를 많이 쓰고 느립니다.** 사양이 낮은 PC에서는 Kind2 / Kind2 + MBP 사용을 권장합니다. 환경변수 등 세부 옵션은 `./fret.sh help` 참고.
+**JKind은 JVM 기반이라 Kind2보다 메모리를 많이 쓰고 느립니다.** 사양이 낮은 PC에서는 Kind2 / Kind2 + MBP 사용을 권장합니다. 
+
+환경변수 등 세부 옵션은 `./fret.sh help` 참고.
 
