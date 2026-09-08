@@ -242,12 +242,24 @@ RUN if [ "$INSTALL_JKIND" = "true" ]; then \
 # via Node's normal upward node_modules search rather than through app/node_modules; the full
 # list was captured by strace-ing a real run end to end rather than guessed, since main.prod.js
 # gives no static hint of them (they are not webpack-bundled).
+#
+# fret-electron/docs is not just static documentation: the renderer bundle references it directly
+# at runtime via relative paths ("../docs/_media/..."), for the per-requirement "SEMANTIC DIAGRAM"
+# image shown in the requirement editor/display dialog (one of ~460 static template SVGs under
+# docs/_media/user-interface/examples/svgDiagrams, selected per FRETish pattern), the FRETish
+# grammar reference opened from the UI, and screenshots embedded in in-app help (the Realizability/
+# Test Case Generation HELP buttons render FRET's own manual docs). Missing this folder does not
+# produce any error a user would notice as a crash; the requirement dialog just silently shows a
+# broken image icon where the diagram should be, and other help/reference views fail similarly
+# quietly. Confirmed by grepping the actual runtime renderer bundle for "../docs/" rather than
+# guessing from the source tree.
 COPY --from=builder /opt/fret/fret-electron/app /opt/fret/fret-electron/app
 COPY --from=builder /opt/fret/fret-electron/node_modules/electron /opt/fret/fret-electron/node_modules/electron
 COPY --from=builder /opt/fret/fret-electron/node_modules/antlr4 /opt/fret/fret-electron/node_modules/antlr4
 COPY --from=builder /opt/fret/fret-electron/node_modules/encoding /opt/fret/fret-electron/node_modules/encoding
 COPY --from=builder /opt/fret/fret-electron/node_modules/safer-buffer /opt/fret/fret-electron/node_modules/safer-buffer
 COPY --from=builder /opt/fret/fret-electron/support /opt/fret/fret-electron/support
+COPY --from=builder /opt/fret/fret-electron/docs /opt/fret/fret-electron/docs
 COPY --from=builder /opt/fret/tools/LTLSIM/ltlsim-core /opt/fret/tools/LTLSIM/ltlsim-core
 COPY --from=builder /opt/fret/caseStudies /opt/fret/caseStudies
 

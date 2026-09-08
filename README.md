@@ -13,7 +13,7 @@
 
 ## 예제 프로젝트 (caseStudies)
 
-컨테이너 안 `/opt/fret/caseStudies` 경로에 예제 프로젝트가 들어 있습니다. Import 대화상자의 왼쪽 목록(Home, Desktop, fret-electron)에는 나타나지 않으니 **Other Locations**를 클릭하거나 `Ctrl+L`로 주소창을 연 뒤 아래 경로를 직접 입력하세요.
+컨테이너 내부 `/opt/fret/caseStudies` 경로에 예제 프로젝트가 들어 있습니다. Import 대화상자의 왼쪽 목록(Home, Desktop, fret-electron)에는 나타나지 않으니 **Other Locations**를 클릭하거나 `Ctrl+L`로 주소창을 연 뒤 아래 경로를 직접 입력하세요.
 
 | 프로젝트 | 경로 |
 |---|---|
