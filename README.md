@@ -1,9 +1,9 @@
 # All in One FRET
 
-![FRET](https://img.shields.io/badge/FRET-v3.1.0-0a84ff)
-![Docker](https://img.shields.io/badge/Docker-required-2496ED?logo=docker&logoColor=white)
-![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)
-![License](https://img.shields.io/badge/license-Apache%202.0-green)
+[![FRET](https://img.shields.io/badge/FRET-v3.1.0-0a84ff)](https://github.com/NASA-SW-VnV/fret/releases/tag/v3.1.0)
+[![Docker](https://img.shields.io/badge/Docker-required-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/get-docker/)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)](https://docs.docker.com/desktop/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-green)](https://www.apache.org/licenses/LICENSE-2.0)
 
 브라우저로 접속해 사용하는 NASA FRET 실습용 Docker 환경입니다. 예제 프로젝트(caseStudies)가 컨테이너 안에 포함되어 있으며, FRET의 Import Project 메뉴로 직접 불러오면 됩니다.
 
