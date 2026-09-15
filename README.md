@@ -5,23 +5,18 @@
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)](https://docs.docker.com/desktop/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green)](https://www.apache.org/licenses/LICENSE-2.0)
 
-브라우저로 접속해 사용하는 NASA FRET 실습용 Docker 환경입니다. 예제 프로젝트(caseStudies)가 컨테이너 안에 포함되어 있으며, FRET의 Import Project 메뉴로 직접 불러오면 됩니다.
+브라우저로 접속해 사용하는 NASA FRET 실습용 Docker 환경입니다.
 
 *Windows 환경은 Git Bash 또는 WSL에서 실행하세요.*
 
 원본 프로젝트: https://github.com/NASA-SW-VnV/fret
 
-## 예제 프로젝트 (caseStudies)
+## 프로젝트 가져오기
 
-컨테이너 내부 `/opt/fret/caseStudies` 경로에 예제 프로젝트가 들어 있습니다. Import 대화상자의 왼쪽 목록(Home, Desktop, fret-electron)에는 나타나지 않으니 **Other Locations**를 클릭하거나 `Ctrl+L`로 주소창을 연 뒤 아래 경로를 직접 입력하세요.
+Import할 JSON을 실행 전 호스트의 `./import` 폴더에 넣으세요. 컨테이너 안 `/root/import` 경로(Import 대화상자의 **Home**)에 그대로 나타납니다.
 
-| 프로젝트 | 경로 |
-|---|---|
-| FiniteStateMachine | `/opt/fret/caseStudies/FiniteStateMachine/fsm_reqts_and_vars.json` |
-| LMCPS | `/opt/fret/caseStudies/LMCPS/LM_requirements.json` |
-| LiftPlusCruise (full) | `/opt/fret/caseStudies/LiftPlusCruise/LPC_full_reqts_and_vars.json` |
-| LiftPlusCruise (mini) | `/opt/fret/caseStudies/LiftPlusCruise/LPC_mini_reqts_and_vars.json` |
-| LiquidMixer | `/opt/fret/caseStudies/LiquidMixer/LM_reqts_and_vars.json` |
+공식 예제 프로젝트(caseStudies)는 프로젝트에 포함되어 있습니다.
+
 
 ## 빌드
 

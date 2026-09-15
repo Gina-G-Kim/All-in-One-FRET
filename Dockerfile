@@ -45,9 +45,12 @@ RUN curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/instal
     && nvm alias default "${NODE_VERSION}"
 ENV PATH="${NVM_DIR}/versions/node/v${NODE_VERSION}/bin:${PATH}"
 
-# FRET source, pinned to a tagged release for a reproducible training image. Cloning the full
-# repository, not just fret-electron, also brings in caseStudies/, the example projects used by
-# FRET's own hands-on exercises.
+# FRET source, pinned to a tagged release for a reproducible training image. fret-electron is a
+# subfolder of the full repository, so the whole thing is cloned even though only that subfolder
+# is actually built. caseStudies/ (also part of this clone) is deliberately not carried into the
+# runtime image below; trainees fetch it themselves into the host-side ./import folder instead
+# (see README), which keeps the image itself independent of any particular set of example
+# projects and lets trainees re-sync examples without rebuilding.
 RUN git clone --branch "${FRET_VERSION}" --depth 1 https://github.com/NASA-SW-VnV/fret.git /opt/fret
 
 WORKDIR /opt/fret/fret-electron
@@ -114,8 +117,12 @@ SHELL ["/bin/bash", "-c"]
 # Electron/Chromium runtime libraries: this is the set the FRET installation guide documents for
 # Ubuntu 24.04+ (libgtk-3-0t64 through libasound2t64), plus the handful of additional X11/GL
 # libraries Chromium needs when rendering into a virtual framebuffer (Xvfb) instead of a real
-# desktop session. fluxbox is the window manager for the session; tini is PID 1 for correct
-# signal handling and zombie reaping.
+# desktop session. fonts-liberation and fonts-dejavu-core (Latin-only) are what FRET's own guide
+# expects; fonts-nanum is added on top since this image is distributed to Korean-speaking
+# trainees who type Hangul into requirement descriptions and variable mappings, and neither of
+# the other two font packages has Hangul glyphs at all (missing glyphs render as blank/broken
+# text, not just wrong-looking text). fluxbox is the window manager for the session; tini is
+# PID 1 for correct signal handling and zombie reaping.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         ca-certificates \
@@ -136,6 +143,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libxfixes3 \
         fonts-liberation \
         fonts-dejavu-core \
+        fonts-nanum \
         xvfb \
         fluxbox \
         x11vnc \
@@ -261,7 +269,6 @@ COPY --from=builder /opt/fret/fret-electron/node_modules/safer-buffer /opt/fret/
 COPY --from=builder /opt/fret/fret-electron/support /opt/fret/fret-electron/support
 COPY --from=builder /opt/fret/fret-electron/docs /opt/fret/fret-electron/docs
 COPY --from=builder /opt/fret/tools/LTLSIM/ltlsim-core /opt/fret/tools/LTLSIM/ltlsim-core
-COPY --from=builder /opt/fret/caseStudies /opt/fret/caseStudies
 
 # FRET's own install docs require adding ltlsim-core/simulator to PATH: it is what the LTLSIM
 # window (standalone, "Simulate" on a diagnosed conflict, "Simulate Realizable Requirements",

@@ -239,9 +239,10 @@ if [ "${FRET_CONTAINER_ENTRYPOINT:-}" = "1" ]; then
     FRET_PID=$!
     track "$FRET_PID"
 
-    # The bundled caseStudies example projects are not imported automatically; FRET's own
-    # Import Project dialog (the down-arrow icon in the left rail) is used to load one manually.
-    entrypoint_log "Bundled example projects are available under: ${FRET_HOME}/caseStudies"
+    # Projects (example case studies fetched into ./import on the host, or a trainee's own
+    # files) are not imported automatically; FRET's own Import Project dialog (the down-arrow
+    # icon in the left rail) is used to load one manually. /root/import shows up under Home.
+    entrypoint_log "Place project JSON files in ./import on the host; they appear under /root/import (Home) for FRET's Import Project dialog."
 
     entrypoint_log "Optional analysis engines detected:"
     for tool in NuSMV z3 kind2 jkind jrealizability jlustre2kind aeval ltlsim; do
@@ -279,6 +280,7 @@ FRET_PORT="${FRET_PORT:-6080}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATA_DIR="${SCRIPT_DIR}/data"
+IMPORT_DIR="${SCRIPT_DIR}/import"
 
 log() {
     printf '[fret.sh] %s\n' "$*"
@@ -316,9 +318,11 @@ docker rmi fret-lab
 Example: ./fret.sh build -all
 
 The GUI is served over noVNC at http://${FRET_HOST}:${FRET_PORT}, viewable in any modern
-browser on macOS, Linux, or Windows, with no additional software required. The bundled
-caseStudies example projects are available inside the container for FRET's own Import Project
-dialog to load manually; they are not imported automatically.
+browser on macOS, Linux, or Windows, with no additional software required. To import a project
+(the official caseStudies examples, or one of your own), place its JSON file in ./import on the
+host before starting the container; it shows up at /root/import inside the container, under
+Home in FRET's Import dialog. Nothing is imported automatically. See README for how to fetch
+the official example projects into ./import.
 
 On native Windows, run this script from Git Bash or WSL. Both already come with Docker
 Desktop's usual setup on Windows.
@@ -459,7 +463,7 @@ cmd_start() {
             docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
         fi
 
-        mkdir -p "$DATA_DIR"
+        mkdir -p "$DATA_DIR" "$IMPORT_DIR"
 
         log "Starting container ${CONTAINER_NAME}."
         local run_args=(
@@ -468,6 +472,7 @@ cmd_start() {
             --shm-size=1g
             -p "${FRET_HOST}:${FRET_PORT}:6080"
             -v "${DATA_DIR}:/root/Documents"
+            -v "${IMPORT_DIR}:/root/import"
         )
         if [ -n "${VNC_PASSWORD:-}" ]; then
             run_args+=(-e "VNC_PASSWORD=${VNC_PASSWORD}")
