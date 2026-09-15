@@ -13,7 +13,9 @@
 
 ## 프로젝트 가져오기
 
-Import할 JSON을 실행 전 호스트의 `./import` 폴더에 넣으세요. 컨테이너 안 `/root/import` 경로(Import 대화상자의 **Home**)에 그대로 나타납니다.
+Import할 JSON을 실행 전 호스트의 `./import` 폴더에 넣으세요. 
+
+컨테이너 안 `/root/import` 경로(Import 대화상자의 **Home**)에 그대로 나타납니다.
 
 공식 예제 프로젝트(caseStudies)는 프로젝트에 포함되어 있습니다.
 
