@@ -15,13 +15,7 @@
 
 Import할 JSON을 실행 전 호스트의 `./import` 폴더에 넣으세요. 컨테이너 안 `/root/import` 경로(Import 대화상자의 **Home**)에 그대로 나타납니다.
 
-공식 예제 프로젝트(caseStudies)는 이 레포를 클론하면 `import/caseStudies`에 이미 포함되어 있습니다. 다시 받고 싶다면:
-
-```
-git clone --depth 1 https://github.com/Gina-G-Kim/All-in-one-FRET.git /tmp/fret-examples
-cp -r /tmp/fret-examples/import/caseStudies import/
-rm -rf /tmp/fret-examples
-```
+공식 예제 프로젝트(caseStudies)는 `import/caseStudies`에 이미 포함되어 있습니다. 
 
 ## 빌드
 
