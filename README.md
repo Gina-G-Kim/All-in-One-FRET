@@ -59,7 +59,7 @@ docker rmi fret-lab
 ./fret.sh logs                # 로그 확인
 ```
 
-`--memory`를 설정하면 JKind의 JVM 힙 크기도 그에 맞춰 자동으로 계산됩니다.
+`--memory`로 컨테이너가 쓸 수 있는 메모리 크기를 조절할 수 있습니다.
 
 **JKind은 JVM 기반이라 Kind2보다 메모리를 많이 쓰고 느립니다.** 사양이 낮은 PC에서는 Kind2 / Kind2 + MBP 사용을 권장합니다.
 
