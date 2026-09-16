@@ -13,12 +13,15 @@
 
 ## 프로젝트 가져오기
 
-Import할 JSON을 실행 전 호스트의 `./import` 폴더에 넣으세요. 
+Import할 JSON을 실행 전 호스트의 `./import` 폴더에 넣으세요. 컨테이너 안 `/root/import` 경로(Import 대화상자의 **Home**)에 그대로 나타납니다.
 
-컨테이너 안 `/root/import` 경로(Import 대화상자의 **Home**)에 그대로 나타납니다.
+공식 예제 프로젝트(caseStudies)는 이 레포를 클론하면 `import/caseStudies`에 이미 포함되어 있습니다. 다시 받고 싶다면:
 
-공식 예제 프로젝트(caseStudies)는 프로젝트에 포함되어 있습니다.
-
+```
+git clone --depth 1 https://github.com/Gina-G-Kim/All-in-one-FRET.git /tmp/fret-examples
+cp -r /tmp/fret-examples/import/caseStudies import/
+rm -rf /tmp/fret-examples
+```
 
 ## 빌드
 
@@ -54,14 +57,17 @@ docker rmi fret-lab
 ## 실행
 
 ```
-./fret.sh start     # 실행 + 브라우저 자동 오픈
-./fret.sh stop      # 종료
-./fret.sh restart   # 재시작
-./fret.sh status    # 상태 확인
-./fret.sh logs      # 로그 확인
+./fret.sh start              # 실행 + 브라우저 자동 오픈 (컨테이너 메모리 제한 기본 4GB)
+./fret.sh start --memory 8   # 메모리 제한을 8GB로 변경 (0이면 제한 없음)
+./fret.sh stop                # 종료
+./fret.sh restart             # 재시작 (옵션은 start와 동일하게 사용 가능)
+./fret.sh status              # 상태 확인
+./fret.sh logs                # 로그 확인
 ```
 
-**JKind은 JVM 기반이라 Kind2보다 메모리를 많이 쓰고 느립니다.** 사양이 낮은 PC에서는 Kind2 / Kind2 + MBP 사용을 권장합니다. 
+`--memory`를 설정하면 JKind의 JVM 힙 크기도 그에 맞춰 자동으로 계산됩니다.
+
+**JKind은 JVM 기반이라 Kind2보다 메모리를 많이 쓰고 느립니다.** 사양이 낮은 PC에서는 Kind2 / Kind2 + MBP 사용을 권장합니다.
 
 환경변수 등 세부 옵션은 `./fret.sh help` 참고.
 

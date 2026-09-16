@@ -224,9 +224,11 @@ RUN if [ "$INSTALL_KIND2" = "true" ]; then \
 # kept out of PATH under /opt/jkind/*-real; both /usr/local/bin/jkind and jrealizability are thin
 # wrappers through docker-entrypoint.sh's --engine-wrap mode, which also retries jrealizability
 # automatically since it is the one confirmed to occasionally hit a nondeterministic upstream Z3
-# crash (documented in FRET's own realizability manual). The realizability path's heap ceiling is
-# also lowered from the upstream default of 3g to 1536m, so that even a full set of concurrent
-# slots stays within what a modest training laptop can spare.
+# crash (documented in FRET's own realizability manual). The realizability path's heap ceiling,
+# upstream default 3g, is rewritten to a shell parameter expansion reading FRET_JKIND_HEAP_MB at
+# container runtime (not a value baked in at build time), so the training laptop's actual
+# available memory (via FRET_MEMORY_GB, see fret.sh) decides the ceiling instead of a one-size
+# guess; 1536 is only the fallback when neither is set.
 RUN if [ "$INSTALL_JKIND" = "true" ]; then \
         apt-get update \
         && apt-get install -y --no-install-recommends default-jre-headless \
@@ -237,7 +239,7 @@ RUN if [ "$INSTALL_JKIND" = "true" ]; then \
         && curl -fsSL -o /opt/jkind/jrealizability-real "https://github.com/andreaskatis/jkind-1/releases/download/v${JKIND_VERSION}/jrealizability" \
         && curl -fsSL -o /usr/local/bin/jlustre2kind "https://github.com/andreaskatis/jkind-1/releases/download/v${JKIND_VERSION}/jlustre2kind" \
         && chmod +x /opt/jkind/jkind-real /opt/jkind/jrealizability-real /usr/local/bin/jlustre2kind \
-        && sed -i 's/-Xmx3g/-Xmx1536m/' /opt/jkind/jrealizability-real \
+        && sed -i 's/-Xmx3g/-Xmx${FRET_JKIND_HEAP_MB:-1536}m/' /opt/jkind/jrealizability-real \
         && printf '#!/bin/bash\nexec /usr/local/bin/docker-entrypoint.sh --engine-wrap /opt/jkind/jkind-real "$@"\n' > /usr/local/bin/jkind \
         && printf '#!/bin/bash\nexec /usr/local/bin/docker-entrypoint.sh --engine-wrap /opt/jkind/jrealizability-real "$@"\n' > /usr/local/bin/jrealizability \
         && chmod +x /usr/local/bin/jkind /usr/local/bin/jrealizability \

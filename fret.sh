@@ -41,9 +41,9 @@
 #
 # Usage (role 1):
 #   ./fret.sh build [options]   Build the fret-lab Docker image
-#   ./fret.sh start              Start the container and open the FRET GUI in a browser
+#   ./fret.sh start [options]   Start the container and open the FRET GUI in a browser
 #   ./fret.sh stop                Stop the running container
-#   ./fret.sh restart            Stop, then start
+#   ./fret.sh restart [options]  Stop, then start (options are passed through to start)
 #   ./fret.sh status              Show whether the container is running
 #   ./fret.sh logs                Follow the container's logs
 #   ./fret.sh help                 Show usage
@@ -60,6 +60,14 @@
 #                   its own Z3 from source, by far the slowest tool to add)
 #   -all            Install every tool not already installed
 #
+# Start options:
+#   --memory N      Cap the container's total memory at N whole GB via "docker run --memory"
+#                    (default: 4). Also sizes JKind's JVM heap automatically: (N*1024 - 1536MB
+#                    reserved for Electron/the GUI stack) divided across FRET_MAX_ENGINE_JOBS
+#                    concurrent slots, floored at 512MB per slot. "--memory 0" removes the limit
+#                    entirely. Set FRET_JKIND_HEAP_MB directly (see below) to bypass the
+#                    auto-sizing and pick JKind's own heap by hand.
+#
 # Environment variables:
 #   FRET_HOST            Host interface the GUI is published on (default: 127.0.0.1)
 #   FRET_PORT            Host port the GUI is published on (default: 6080)
@@ -74,6 +82,10 @@
 #   FRET_JKIND_RETRY_ATTEMPTS  Retries for JKind's realizability engine (default: 3). It
 #                        occasionally hits a nondeterministic upstream Z3 crash that a retry
 #                        reliably resolves; this is unrelated to FRET_MAX_ENGINE_JOBS.
+#   FRET_JKIND_HEAP_MB   JKind's JVM heap ceiling in MB (default: auto-derived from the
+#                        "--memory" start option, see above). Rarely needs setting directly;
+#                        prefer "--memory" unless you specifically need to tune JKind's own
+#                        share independent of the container's overall limit.
 
 set -euo pipefail
 
@@ -258,6 +270,10 @@ if [ "${FRET_CONTAINER_ENTRYPOINT:-}" = "1" ]; then
     # occasional nondeterministic Z3 crash automatically.
     entrypoint_log "Analysis engine concurrency limit: ${FRET_MAX_ENGINE_JOBS:-2} (override with -e FRET_MAX_ENGINE_JOBS=N)"
     entrypoint_log "JKind realizability retry attempts: ${FRET_JKIND_RETRY_ATTEMPTS:-3} (override with -e FRET_JKIND_RETRY_ATTEMPTS=N)"
+    entrypoint_log "JKind JVM heap: ${FRET_JKIND_HEAP_MB:-1536}MB (set via FRET_MEMORY_GB or FRET_JKIND_HEAP_MB at './fret.sh start')"
+    if [ -n "${FRET_MEMORY_GB:-}" ]; then
+        entrypoint_log "Container memory limit: ${FRET_MEMORY_GB}GB"
+    fi
 
     entrypoint_log "FRET is starting. View it at http://localhost:${NOVNC_PORT}/vnc.html"
 
@@ -297,9 +313,9 @@ Usage: ./fret.sh <command>
 
 Commands:
   build [options]   Build the fret-lab Docker image
-  start             Start the container and open the FRET GUI in a browser
+  start [options]   Start the container and open the FRET GUI in a browser
   stop              Stop the running container
-  restart           Stop, then start
+  restart [options] Stop, then start (options are passed through to start)
   status            Show whether the container is running
   logs              Follow the container's logs (Ctrl+C stops watching, container keeps running)
   help              Show this message
@@ -317,6 +333,11 @@ docker rmi fret-lab
   -all              Install every tool not already installed
 Example: ./fret.sh build -all
 
+Start options:
+  --memory N        Cap the container's total memory at N whole GB (default: 4). JKind's JVM
+                    heap is sized automatically from this. "--memory 0" removes the limit.
+Example: ./fret.sh start --memory 8
+
 The GUI is served over noVNC at http://${FRET_HOST}:${FRET_PORT}, viewable in any modern
 browser on macOS, Linux, or Windows, with no additional software required. To import a project
 (the official caseStudies examples, or one of your own), place its JSON file in ./import on the
@@ -328,7 +349,7 @@ On native Windows, run this script from Git Bash or WSL. Both already come with 
 Desktop's usual setup on Windows.
 
 Environment variables: FRET_HOST, FRET_PORT, FRET_VERSION, VNC_PASSWORD, FRET_MAX_ENGINE_JOBS,
-FRET_JKIND_RETRY_ATTEMPTS (see top of script).
+FRET_JKIND_RETRY_ATTEMPTS, FRET_JKIND_HEAP_MB (see top of script).
 EOF
 }
 
@@ -449,6 +470,23 @@ cmd_build() {
 }
 
 cmd_start() {
+    local memory_gb="${FRET_MEMORY_GB:-4}"
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --memory)
+                shift
+                [ $# -gt 0 ] || die "--memory requires a value in GB (see: ./fret.sh help)"
+                memory_gb="$1"
+                ;;
+            --memory=*)
+                memory_gb="${1#--memory=}"
+                ;;
+            *) die "Unknown start option: $1 (see: ./fret.sh help)" ;;
+        esac
+        shift
+    done
+
     require_docker
 
     if ! image_exists; then
@@ -483,6 +521,35 @@ cmd_start() {
         if [ -n "${FRET_JKIND_RETRY_ATTEMPTS:-}" ]; then
             run_args+=(-e "FRET_JKIND_RETRY_ATTEMPTS=${FRET_JKIND_RETRY_ATTEMPTS}")
         fi
+        # "--memory 0" (or FRET_MEMORY_GB=0) is the escape hatch for no limit at all; any other
+        # value, including the default of 4, caps the container and is also handed to the
+        # container's own environment so the entrypoint can log the effective setting.
+        if [ "$memory_gb" != "0" ]; then
+            run_args+=(--memory="${memory_gb}g" -e "FRET_MEMORY_GB=${memory_gb}")
+        fi
+
+        # Auto-derive JKind's heap from the container memory cap when the user has not picked
+        # one directly: reserve headroom for Electron/the GUI stack, then split what is left
+        # evenly across the concurrency limit, so a full set of concurrent JKind processes stays
+        # within the container's own ceiling instead of overcommitting it.
+        local jkind_heap_mb="${FRET_JKIND_HEAP_MB:-}"
+        if [ -z "$jkind_heap_mb" ] && [ "$memory_gb" != "0" ]; then
+            local jobs="${FRET_MAX_ENGINE_JOBS:-2}"
+            local total_mb=$((memory_gb * 1024))
+            local reserved_mb=1536
+            local available_mb=$((total_mb - reserved_mb))
+            if [ "$available_mb" -lt "$jobs" ]; then
+                available_mb=$jobs
+            fi
+            jkind_heap_mb=$((available_mb / jobs))
+            if [ "$jkind_heap_mb" -lt 512 ]; then
+                jkind_heap_mb=512
+            fi
+        fi
+        if [ -n "$jkind_heap_mb" ]; then
+            run_args+=(-e "FRET_JKIND_HEAP_MB=${jkind_heap_mb}")
+        fi
+
         docker run "${run_args[@]}" "${IMAGE_NAME}:${IMAGE_TAG}" >/dev/null
 
         log "Waiting for the GUI to become ready."
@@ -542,7 +609,7 @@ cmd_stop() {
 
 cmd_restart() {
     cmd_stop
-    cmd_start
+    cmd_start "$@"
 }
 
 cmd_status() {
@@ -572,9 +639,9 @@ main() {
 
     case "$command" in
         build) cmd_build "$@" ;;
-        start) cmd_start ;;
+        start) cmd_start "$@" ;;
         stop) cmd_stop ;;
-        restart) cmd_restart ;;
+        restart) cmd_restart "$@" ;;
         status) cmd_status ;;
         logs) cmd_logs ;;
         help|-h|--help) usage ;;
