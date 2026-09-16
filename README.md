@@ -51,8 +51,8 @@ docker rmi fret-lab
 ## 실행
 
 ```
-./fret.sh start              # 실행 + 브라우저 자동 오픈 (컨테이너 메모리 제한 기본 4GB)
-./fret.sh start --memory 8   # 메모리 제한을 8GB로 변경 (0이면 제한 없음)
+./fret.sh start               # 실행 + 브라우저 자동 오픈 (컨테이너 메모리 제한 기본 4GB)
+./fret.sh start --memory 8    # 메모리 제한을 8GB로 변경 (0이면 제한 없음)
 ./fret.sh stop                # 종료
 ./fret.sh restart             # 재시작 (옵션은 start와 동일하게 사용 가능)
 ./fret.sh status              # 상태 확인
